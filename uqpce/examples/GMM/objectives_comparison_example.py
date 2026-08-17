@@ -14,10 +14,10 @@ statistic picks a different compromise between performance and exposure:
     deterministic   ignores uncertainty, sits at (4, 4)
     mean            best expected value, accepts a wide distribution
     mean_plus_var   narrowest distribution, pays the largest mean penalty
-    ci_upper        best 97.5th percentile
-    cvar_upper      best tail mean; relative to ci_upper it shifts
-                    exposure away from the unbounded multimodal a1 and
-                    onto the bounded a2
+    ci_upper        best 95th percentile (alpha = 0.1)
+    cvar_upper      best mean of the worst 5%; relative to ci_upper it
+                    shifts exposure away from the unbounded multimodal
+                    a1 and onto the bounded a2
 
 f is quadratic in the uncertain inputs, so the order-2 PCE is exact and
 the designs differ only because of the statistics, not surrogate error.
@@ -48,6 +48,7 @@ from uqpce.mdao import interface
 from uqpce.mdao.uqpcegroup import UQPCEGroup
 
 X_TARGET = 4.0
+ALPHA = 0.1  # ci_upper = 95th percentile, cvar_upper = mean of the worst 5%
 OBJECTIVES = ('mean', 'mean_plus_var', 'ci_upper', 'cvar_upper')
 
 
@@ -128,7 +129,7 @@ def optimize_statistic(objective, uq_data):
     prob.model.add_subsystem(
         'uq',
         UQPCEGroup(
-            significance=sig, var_basis=var_basis, norm_sq=norm_sq,
+            significance=ALPHA, var_basis=var_basis, norm_sq=norm_sq,
             resampled_var_basis=resampled_var_basis, tail='upper',
             aleatory_cnt=aleatory_cnt, epistemic_cnt=epistemic_cnt,
             compute_cvar=True
@@ -165,7 +166,7 @@ def evaluate_designs(designs, uq_data):
     prob.model.add_subsystem(
         'uq',
         UQPCEGroup(
-            significance=sig, var_basis=var_basis, norm_sq=norm_sq,
+            significance=ALPHA, var_basis=var_basis, norm_sq=norm_sq,
             resampled_var_basis=resampled_var_basis, tail='upper',
             aleatory_cnt=aleatory_cnt, epistemic_cnt=epistemic_cnt,
             compute_cvar=True
